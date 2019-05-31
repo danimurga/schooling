@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      - {key: tier, operator: In, values: [Backend]}
+      - {key: app, operator: NotIn, values: [stopped]}
+  template:
+    metadata:
+      name: nginx-app
+      labels:
+        app: nginx-app
+        tier: Backend
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx
+          ports:
+          - containerPort: 80

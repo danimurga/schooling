@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    io.rancher.scheduler.affinity:host_label: moon-pr=true
+    io.rancher.service.external_dns: always
+    kompose.cmd: kompose convert -f moon-compose
+    kompose.version: 1.18.0 (06a2e56)
+    traefik.acme: "false"
+    traefik.alias: '{{ .Environment.Name }}-{{ .Stack.Name }}'
+    traefik.domain: ""
+    traefik.enable: "true"
+    traefik.frontend.entryPoints: http,https
+    traefik.frontend.redirect.entryPoint: https
+    traefik.frontend.rule: 'Host: {{ .Environment.Name }}-{{ .Stack.Name }}.'
+    traefik.path: /
+    traefik.port: "80"
+    traefik.protocol: http
+  creationTimestamp: null
+  labels:
+    io.kompose.service: retail-proxy-moon
+  name: retail-proxy-moon
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: retail-proxy-moon
+    spec:
+      containers:
+      - image: rancher/lb-service-haproxy:v0.9.6
+        name: retail-proxy-moon
+        resources: {}
+      restartPolicy: Always
+status: {}

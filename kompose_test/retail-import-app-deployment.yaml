@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    io.rancher.scheduler.affinity:host_label: moon-pr=true
+    kompose.cmd: kompose convert -f moon-compose
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: retail-import-app
+  name: retail-import-app
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: retail-import-app
+    spec:
+      containers:
+      - image: docker.nespresso.com/moon/retail-import-app:8.160.1
+        name: retail-import-app
+        resources: {}
+      restartPolicy: Always
+status: {}

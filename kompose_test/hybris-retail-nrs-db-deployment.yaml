@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.scheduler.affinity:host_label: moon-pr=true
+    kompose.cmd: kompose convert -f moon-compose
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: hybris-retail-nrs-db
+  name: hybris-retail-nrs-db
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: hybris-retail-nrs-db
+    spec:
+      containers:
+      - image: docker.nespresso.com/moon/nesclub2-retail-nrs-db:20180522
+        name: hybris-retail-nrs-db
+        ports:
+        - containerPort: 1521
+        resources: {}
+      restartPolicy: Always
+status: {}

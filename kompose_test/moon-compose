@@ -1,0 +1,97 @@
+---
+version: '2'
+services:
+
+  # NRS database
+  hybris-retail-nrs-db:
+    image: docker.nespresso.com/moon/nesclub2-retail-nrs-db:20180522
+    labels:
+      io.rancher.scheduler.affinity:host_label: moon-pr=true
+      io.rancher.container.hostname_override: container_name
+    ports:
+      - "1521"
+
+  # Nessoft database
+  nessoft-db:
+    image: docker.nespresso.com/moon/nessoft-db:19.2.10
+    labels:
+      io.rancher.scheduler.affinity:host_label: moon-pr=true
+      io.rancher.scheduler.affinity:container_label: io.rancher.stack_service.name=$${stack_name}/hybris-retail-nrs-db
+      io.rancher.container.hostname_override: container_name
+    shm_size: "8gb"
+    ports:
+      - "1521"
+
+  # Retail app
+  retail-app:
+    image: docker.nespresso.com/moon/retail-app:8.160.1
+    labels:
+      io.rancher.scheduler.affinity:host_label: moon-pr=true
+    depends_on:
+      - nrs-app
+
+  # Retail import app
+  retail-import-app:
+    image: docker.nespresso.com/moon/retail-import-app:8.160.1
+    labels:
+      io.rancher.scheduler.affinity:host_label: moon-pr=true
+    depends_on:
+      - nrs-app
+
+  # NRS app
+  nrs-app:
+    image: docker.nespresso.com/moon/nrs-app:1.200.1
+    labels:
+      io.rancher.scheduler.affinity:host_label: moon-pr=true
+    environment:
+      - NESSOFT_URL=nessoft-db:1521/moon.nespresso.com
+      - DB_URL=hybris-retail-nrs-db:1521:xe
+    depends_on:
+      - hybris-retail-nrs-db
+      - nessoft-db
+
+  # Load balancer   
+  retail-proxy-moon:
+    image: rancher/lb-service-haproxy:v0.9.6
+    labels:
+    
+      # Affinity
+      io.rancher.scheduler.affinity:host_label: moon-pr=true
+      
+      # Always register external DNS for this LB
+      io.rancher.service.external_dns: "always"      
+      
+      # Traefik rules      
+      traefik.enable: 'true'
+      traefik.protocol: 'http'
+      traefik.domain: '${ROOT_DOMAIN}'
+      traefik.alias: '{{ .Environment.Name }}-{{ .Stack.Name }}'
+      traefik.frontend.rule: 'Host: {{ .Environment.Name }}-{{ .Stack.Name }}.${ROOT_DOMAIN}'
+      traefik.port: '80'
+      traefik.acme: 'false'
+      traefik.path: '/' 
+      # Redirect http --> https
+      traefik.frontend.entryPoints: 'http,https'
+      traefik.frontend.redirect.entryPoint: 'https'
+      
+    depends_on:
+      - retail-app
+      - retail-import-app
+      - nrs-app
+      - moon-utils
+
+  # Moon Utils
+  moon-utils:
+    image: docker.nespresso.com/moon-utils:0.2.1-3
+    environment:
+      - rancher_enabled=true
+    labels:
+      io.rancher.scheduler.global: "false"
+      io.rancher.container.start_once: "false"
+      io.rancher.container.pull_image: "true"
+      io.rancher.scheduler.affinity:container_label: io.rancher.stack_service.name=$${stack_name}/hybris-retail-nrs-db
+      io.rancher.scheduler.affinity:host_label: moon-pr=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - hybris-retail-nrs-db

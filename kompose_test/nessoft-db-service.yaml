@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.scheduler.affinity:container_label: io.rancher.stack_service.name=${stack_name}/hybris-retail-nrs-db
+    io.rancher.scheduler.affinity:host_label: moon-pr=true
+    kompose.cmd: kompose convert -f moon-compose
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: nessoft-db
+  name: nessoft-db
+spec:
+  ports:
+  - name: "1521"
+    port: 1521
+    targetPort: 1521
+  selector:
+    io.kompose.service: nessoft-db
+status:
+  loadBalancer: {}

@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    io.rancher.scheduler.affinity_host_label: moon-pr=true
+    kompose.cmd: kompose convert -f moon-compose
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: nrs-app
+  name: nrs-app
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: nrs-app
+    spec:
+      containers:
+      - env:
+        - name: DB_URL
+          value: hybris-retail-nrs-db:1521:xe
+        - name: NESSOFT_URL
+          value: nessoft-db:1521/moon.nespresso.com
+        image: docker.nespresso.com/moon/nrs-app:1.200.1
+        name: nrs-app
+        resources: {}
+      restartPolicy: Always
+status: {}
